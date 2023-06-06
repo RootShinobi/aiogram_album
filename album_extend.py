@@ -3,7 +3,7 @@ from typing import Callable, Dict, Any, Awaitable, List, Union, Optional, Iterat
 
 from cachetools import TTLCache
 
-from aiogram import BaseMiddleware
+from aiogram import BaseMiddleware, Router
 from aiogram.types import (
     Message as AMessage,
     InputMedia,
@@ -17,9 +17,14 @@ from aiogram.types import (
     Audio,
     Voice,
     VideoNote,
-    UNSET,
     MessageEntity
 )
+
+try:
+    from aiogram.types import UNSET_PARSE_MODE, UNSET_TYPE # noqa # >=3.0.0b8
+except ImportError:
+    UNSET_PARSE_MODE = UNSET_TYPE = __import__(name='aiogram.types',fromlist=("UNSET",))
+
 
 from pyrogram import Client
 from pyrogram.types import Message as PMessage
@@ -27,7 +32,7 @@ from pyrogram.types import Message as PMessage
 
 def to_message(message: PMessage) -> AMessage:
     content_type = str(message.media.value)
-    message.chat.type = str(message.chat.type.value)
+    message.chat.type = message.chat.type.value
 
     thumb = getattr(message, content_type).thumbs
     if thumb:
@@ -62,7 +67,7 @@ def to_message(message: PMessage) -> AMessage:
 def to_input_media(
         message: AMessage,
         caption: Optional[str] = None,
-        parse_mode: Optional[str] = UNSET,
+        parse_mode: Optional[str] = UNSET_PARSE_MODE,
         caption_entities: Optional[List[MessageEntity]] = None
 ) -> InputMedia:
     if message.content_type == "photo":
@@ -102,6 +107,24 @@ class AlbumMessage(AMessage):
     def content_type(self):
         return "media_group"
 
+    async def copy_to(
+        self,
+        chat_id: Union[int, str],
+        caption: Optional[Union[str, List[str]]] = None,
+        message_thread_id: Optional[int] = None,
+        disable_notification: Optional[bool] = None,
+        reply_to_message_id: Optional[int] = None,
+        **kwargs: Any,
+    ) -> Union[PMessage, List[PMessage]]:
+        return await self._client.copy_media_group(
+            chat_id=chat_id,
+            from_chat_id=self.chat.id,
+            message_id=self.message_id,
+            captions=caption,
+            disable_notification=disable_notification,
+            reply_to_message_id=reply_to_message_id
+        )
+
     async def forward(
             self,
             chat_id: Union[int, str],
@@ -138,16 +161,16 @@ class AlbumMessage(AMessage):
 
     def as_input_media(
             self,
-            caption: Optional[Union[str, List[str]]] = UNSET,
-            parse_mode: Optional[str] = UNSET,
-            caption_entities: Optional[Union[List[MessageEntity], List[List[MessageEntity]]]] = UNSET
+            caption: Optional[Union[str, List[str]]] = UNSET_TYPE,
+            parse_mode: Optional[str] = UNSET_PARSE_MODE,
+            caption_entities: Optional[Union[List[MessageEntity], List[List[MessageEntity]]]] = UNSET_TYPE
 
     ) -> List[InputMedia]:
-        if caption is UNSET:
+        if caption is UNSET_TYPE:
             caption = [None]
         elif isinstance(caption, str):
             caption = [caption]
-        if caption_entities is UNSET:
+        if caption_entities is UNSET_TYPE:
             caption_entities = [None]
         elif isinstance(caption_entities[0], MessageEntity):
             caption_entities = [caption_entities]
@@ -176,6 +199,12 @@ class AlbumMessage(AMessage):
 
 class AlbumMiddleware(BaseMiddleware):
     cache = TTLCache(maxsize=10, ttl=10)
+    client: Optional[Client]
+
+    def __init__(self, /, client: Optional[Client] = None, router: Optional[Router] = None):
+        self.client = client
+        if router:
+            router.message.outer_middleware.register(self)
 
     async def __call__(
             self,
@@ -187,5 +216,5 @@ class AlbumMiddleware(BaseMiddleware):
             if event.media_group_id in self.cache:
                 return
             self.cache[event.media_group_id] = True
-            event = await AlbumMessage.from_message(data['client'], event)
+            event = await AlbumMessage.from_message(self.client or data['client'], event)
         return await handler(event, data)
