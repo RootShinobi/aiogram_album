@@ -21,9 +21,7 @@ async def media_handler(message: AlbumMessage):
         f"size: {len(message)}\n"
         f"content types: {[m.content_type for m in message]}"
     )
-    await message.copy_to(
-        message.chat.id
-    )
+    await message.copy_to(message.chat.id)
 
 
 async def main():
