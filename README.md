@@ -35,6 +35,24 @@ await PyrogramAlbumMiddleware.from_app_data(
     router=dp,
 )
 ```
+or
+
+```python
+from aiogram_album.pyrogram_album.middleware import PyrogramAlbumMiddleware
+from pyrogram import Client
+from aiogram import Bot
+
+bot = Bot(BOT_TOKEN)
+client = Client(str(bot.id), bot_token=BOT_TOKEN, api_hash=API_HASH, api_id=API_ID, no_updates=True)
+await client.start()
+
+PyrogramAlbumMiddleware(
+    client=client,
+    router=dp,
+)
+
+
+```
 
 ## TTLCacheAlbumMiddleware
 _Install_
