@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "aiogram_album"
+version = "0.0.1b"
+description = "😎"
+authors = ["RootShinobi <111008396+RootShinobi@users.noreply.github.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+aiogram = "^3.3.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

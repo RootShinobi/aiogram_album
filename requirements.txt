@@ -1,5 +1,0 @@
-aiogram
-cachetools
-Pyrogram
-TgCrypto
-pydantic==2.3.0
