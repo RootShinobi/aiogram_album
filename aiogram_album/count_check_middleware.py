@@ -9,14 +9,15 @@ from aiogram_album.album_message import AlbumMessage
 
 class CountCheckAlbumMiddleware(BaseMiddleware):
     def __init__(
-            self,
-            latency: Union[int, float] = 0.1,
-            router: Optional[Router] = None,
+        self,
+        latency: Union[int, float] = 0.1,
+        router: Optional[Router] = None,
     ):
         self.latency = latency
         self.album_data: dict[str, list[Message]] = {}
         if router:
             router.message.outer_middleware(self)
+            router.channel_post.outer_middleware(self)
 
     def collect_album_messages(self, event: Message):
         if event.media_group_id not in self.album_data:
@@ -25,10 +26,10 @@ class CountCheckAlbumMiddleware(BaseMiddleware):
         return len(self.album_data[event.media_group_id])
 
     async def __call__(
-            self,
-            handler: Callable[[Message, dict[str, Any]], Awaitable[Any]],
-            event: Message,
-            data: Dict[str, Any]
+        self,
+        handler: Callable[[Message, dict[str, Any]], Awaitable[Any]],
+        event: Message,
+        data: Dict[str, Any],
     ) -> Any:
         if event.media_group_id is None:
             return await handler(event, data)
@@ -38,8 +39,7 @@ class CountCheckAlbumMiddleware(BaseMiddleware):
         if total_before != total_after:
             return
         event = AlbumMessage.new(
-            messages=self.album_data.pop(event.media_group_id),
-            data=data
+            messages=self.album_data.pop(event.media_group_id), data=data
         )
         # album_messages.sort(key=lambda x: x.message_id)
         return await handler(event, data)

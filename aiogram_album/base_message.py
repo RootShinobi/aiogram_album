@@ -2,16 +2,24 @@ from itertools import zip_longest
 from typing import Optional, List, Union, Iterator, Any, Dict, cast
 
 from aiogram import Bot
-from aiogram.types import Message, UNSET_PARSE_MODE, InputMedia, InputMediaPhoto, InputMediaVideo, InputMediaAudio, \
-    InputMediaDocument, MessageEntity
+from aiogram.types import (
+    Message,
+    UNSET_PARSE_MODE,
+    InputMedia,
+    InputMediaPhoto,
+    InputMediaVideo,
+    InputMediaAudio,
+    InputMediaDocument,
+    MessageEntity,
+)
 from aiogram.types.base import UNSET
 
 
 def to_input_media(
-        message: Message,
-        caption: Optional[str] = None,
-        parse_mode: Optional[str] = UNSET_PARSE_MODE,
-        caption_entities: Optional[List[MessageEntity]] = None,
+    message: Message,
+    caption: Optional[str] = None,
+    parse_mode: Optional[str] = UNSET_PARSE_MODE,
+    caption_entities: Optional[List[MessageEntity]] = None,
 ) -> InputMedia:
     if message.content_type == "photo":
         cls = InputMediaPhoto
@@ -55,12 +63,12 @@ class BaseAlbumMessage(Message, frozen=False):
         return "media_group"
 
     def as_input_media(
-            self,
-            caption: Optional[Union[str, List[str]]] = UNSET,
-            parse_mode: Optional[str] = UNSET_PARSE_MODE,
-            caption_entities: Optional[
-                Union[List[MessageEntity], List[List[MessageEntity]]]
-            ] = UNSET,
+        self,
+        caption: Optional[Union[str, List[str]]] = UNSET,
+        parse_mode: Optional[str] = UNSET_PARSE_MODE,
+        caption_entities: Optional[
+            Union[List[MessageEntity], List[List[MessageEntity]]]
+        ] = UNSET,
     ) -> List[InputMedia]:
         if caption is UNSET:
             caption = [None]
@@ -89,24 +97,24 @@ class BaseAlbumMessage(Message, frozen=False):
         return self._messages.__len__()
 
     async def copy_to(
-            self,
-            chat_id: Union[int, str],
-            *args,
-            **kwargs: Any,
+        self,
+        chat_id: Union[int, str],
+        *args,
+        **kwargs: Any,
     ) -> Any:
         raise NotImplementedError
 
     async def forward(
-            self,
-            chat_id: Union[int, str],
-            *args,
-            **kwargs: Any,
+        self,
+        chat_id: Union[int, str],
+        *args,
+        **kwargs: Any,
     ) -> Any:
         raise NotImplementedError
 
     async def delete(
-            self,
-            *args,
-            **kwargs: Any,
+        self,
+        *args,
+        **kwargs: Any,
     ) -> Any:
         raise NotImplementedError

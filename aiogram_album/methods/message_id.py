@@ -19,7 +19,9 @@ class MessageId(TelegramObject):
         # DO NOT EDIT MANUALLY!!!
         # This section was auto-generated via `butcher`
 
-        def __init__(__pydantic__self__, *, message_id: int, **__pydantic_kwargs: Any) -> None:
+        def __init__(
+            __pydantic__self__, *, message_id: int, **__pydantic_kwargs: Any
+        ) -> None:
             # DO NOT EDIT MANUALLY!!!
             # This method was auto-generated via `butcher`
             # Is needed only for type checking and IDE support without any additional plugins

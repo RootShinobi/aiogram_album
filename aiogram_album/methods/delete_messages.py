@@ -33,4 +33,6 @@ class DeleteMessages(TelegramMethod[bool]):
             # This method was auto-generated via `butcher`
             # Is needed only for type checking and IDE support without any additional plugins
 
-            super().__init__(chat_id=chat_id, message_ids=message_ids, **__pydantic_kwargs)
+            super().__init__(
+                chat_id=chat_id, message_ids=message_ids, **__pydantic_kwargs
+            )

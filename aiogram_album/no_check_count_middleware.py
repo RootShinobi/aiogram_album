@@ -8,16 +8,16 @@ from aiogram_album.album_message import AlbumMessage
 
 
 class WithoutCountCheckAlbumMiddleware(BaseMiddleware):
-
     def __init__(
-            self,
-            latency: Union[int, float] = 0.1,
-            router: Optional[Router] = None,
+        self,
+        latency: Union[int, float] = 0.1,
+        router: Optional[Router] = None,
     ):
         self.latency = latency
         self.album_data: dict[str, list[Message]] = {}
         if router:
             router.message.outer_middleware(self)
+            router.channel_post.outer_middleware(self)
 
     async def __call__(
         self,
@@ -35,8 +35,7 @@ class WithoutCountCheckAlbumMiddleware(BaseMiddleware):
             self.album_data[event.media_group_id] = [event]
             await sleep(self.latency)
             event = AlbumMessage.new(
-                messages=self.album_data.pop(event.media_group_id),
-                data=data
+                messages=self.album_data.pop(event.media_group_id), data=data
             )
 
         return await handler(event, data)

@@ -12,23 +12,24 @@ class LockAlbumMiddleware(BaseMiddleware):
     cache: MutableMapping[str, list[Message]]
 
     def __init__(
-            self,
-            latency: Union[int, float] = 0.2,
-            maxsize: int = 1000,
-            ttl: Union[int, float] = 10,
-            router: Optional[Router] = None,
+        self,
+        latency: Union[int, float] = 0.2,
+        maxsize: int = 1000,
+        ttl: Union[int, float] = 10,
+        router: Optional[Router] = None,
     ):
         self.lock = asyncio.Lock()
         self.latency = latency
         self.cache = TTLCache(maxsize=maxsize, ttl=float(ttl) + 20.0)
         if router:
             router.message.outer_middleware(self)
+            router.channel_post.outer_middleware(self)
 
     async def __call__(
-            self,
-            handler: Callable[[Message, Dict[str, Any]], Awaitable[Any]],
-            event: Message,
-            data: Dict[str, Any],
+        self,
+        handler: Callable[[Message, Dict[str, Any]], Awaitable[Any]],
+        event: Message,
+        data: Dict[str, Any],
     ) -> Any:
         if event.media_group_id is None:
             return await handler(event, data)
@@ -54,9 +55,6 @@ class LockAlbumMiddleware(BaseMiddleware):
         if my_message_id != smallest_message_id:
             return
 
-        event = AlbumMessage.new(
-            messages=self.cache[album_id],
-            data=data
-        )
+        event = AlbumMessage.new(messages=self.cache[album_id], data=data)
 
         return await handler(event, data)

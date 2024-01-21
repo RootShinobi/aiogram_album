@@ -23,7 +23,9 @@ class AlbumMessage(BaseAlbumMessage):
         )
 
     @classmethod
-    def new_data(cls, messages: List[Message], client: Client, bot: Bot) -> "AlbumMessage":
+    def new_data(
+        cls, messages: List[Message], client: Client, bot: Bot
+    ) -> "AlbumMessage":
         self = cls.model_validate(messages[0], from_attributes=True).as_(bot)
         self._messages = messages
         self._client = client
@@ -32,10 +34,7 @@ class AlbumMessage(BaseAlbumMessage):
 
     @classmethod
     def _from_pyro_messages(
-            cls,
-            messages: List[PyroMessage],
-            client: Client,
-            bot: Bot
+        cls, messages: List[PyroMessage], client: Client, bot: Bot
     ) -> "AlbumMessage":
         return cls.new_data(
             messages=[to_message(message=message, bot=bot) for message in messages],
@@ -44,11 +43,11 @@ class AlbumMessage(BaseAlbumMessage):
         )
 
     async def forward(
-            self,
-            chat_id: Union[int, str],
-            disable_notification: Optional[bool] = None,
-            protect_content: Optional[bool] = None,
-            to_album: bool = False,
+        self,
+        chat_id: Union[int, str],
+        disable_notification: Optional[bool] = None,
+        protect_content: Optional[bool] = None,
+        to_album: bool = False,
     ) -> "AlbumMessage":
         return AlbumMessage._from_pyro_messages(
             messages=await self._client.forward_messages(
@@ -69,13 +68,13 @@ class AlbumMessage(BaseAlbumMessage):
         )
 
     async def copy_to(
-            self,
-            chat_id: Union[int, str],
-            message_thread_id: Optional[int] = None,
-            caption: Optional[Union[List[str], str]] = None,
-            disable_notification: Optional[bool] = None,
-            reply_to_message_id: Optional[int] = None,
-            to_album: bool = False,
+        self,
+        chat_id: Union[int, str],
+        message_thread_id: Optional[int] = None,
+        caption: Optional[Union[List[str], str]] = None,
+        disable_notification: Optional[bool] = None,
+        reply_to_message_id: Optional[int] = None,
+        to_album: bool = False,
     ) -> "AlbumMessage":
         return AlbumMessage._from_pyro_messages(
             messages=await self._client.copy_media_group(

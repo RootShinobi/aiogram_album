@@ -17,16 +17,17 @@ class PyrogramAlbumMiddleware(BaseMiddleware):
 
     @classmethod
     async def from_app_data(
-            cls, /,
-            bot_token: str,
-            api_id: int,
-            api_hash: str,
-            name: Optional[str] = None,
-            router: Optional[Router] = None,
-            message_class: type[BaseAlbumMessage] = AlbumMessage,
-            maxsize: Optional[int] = None,
-            ttl: Optional[int] = None,
-            **kwargs,
+        cls,
+        /,
+        bot_token: str,
+        api_id: int,
+        api_hash: str,
+        name: Optional[str] = None,
+        router: Optional[Router] = None,
+        message_class: type[BaseAlbumMessage] = AlbumMessage,
+        maxsize: Optional[int] = None,
+        ttl: Optional[int] = None,
+        **kwargs,
     ):
         client = Client(
             bot_token=bot_token,
@@ -34,7 +35,7 @@ class PyrogramAlbumMiddleware(BaseMiddleware):
             api_id=api_id,
             api_hash=api_hash,
             no_updates=kwargs.pop("no_updates", True),
-            **kwargs
+            **kwargs,
         )
         await client.start()
         return cls(
@@ -46,18 +47,20 @@ class PyrogramAlbumMiddleware(BaseMiddleware):
         )
 
     def __init__(
-            self, /,
-            client: Client,
-            router: Optional[Router] = None,
-            message_class: type[BaseAlbumMessage] = AlbumMessage,
-            maxsize: Optional[int] = None,
-            ttl: Optional[int] = None,
+        self,
+        /,
+        client: Client,
+        router: Optional[Router] = None,
+        message_class: type[BaseAlbumMessage] = AlbumMessage,
+        maxsize: Optional[int] = None,
+        ttl: Optional[int] = None,
     ):
         self.client = client
         self.message_class = message_class
         self.cache = TTLCache(maxsize=maxsize or 100, ttl=ttl or 10)
         if router:
             router.message.outer_middleware.register(self)
+            router.channel_post.outer_middleware(self)
 
     async def get_album(self, message: Message, bot: Bot) -> list[Message]:
         return [
@@ -69,10 +72,10 @@ class PyrogramAlbumMiddleware(BaseMiddleware):
         ]
 
     async def __call__(
-            self,
-            handler: Callable[[Message, dict[str, Any]], Awaitable[Any]],
-            event: Message,
-            data: dict[str, Any],
+        self,
+        handler: Callable[[Message, dict[str, Any]], Awaitable[Any]],
+        event: Message,
+        data: dict[str, Any],
     ) -> Any:
         if event.media_group_id:
             if event.media_group_id in self.cache:
@@ -84,7 +87,7 @@ class PyrogramAlbumMiddleware(BaseMiddleware):
                     message=event,
                     bot=cast(Bot, data["bot"]),
                 ),
-                data=data
+                data=data,
             )
             data.pop("__pyro", None)
         return await handler(event, data)
