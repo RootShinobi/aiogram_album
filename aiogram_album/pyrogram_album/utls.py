@@ -1,6 +1,13 @@
 from aiogram import Bot
 from aiogram.types import Message, PhotoSize, Video, Document, Audio, VideoNote, Voice
-from pyrogram.types import Message as PyrogramMessage
+from pyrogram.types import Message as PyrogramMessage, Chat
+
+
+def chat_fix(chat: Chat):
+    chat.type = chat.type.value
+    if chat.photo:
+        chat.photo.small_file_unique_id = chat.photo.small_photo_unique_id
+        chat.photo.big_file_unique_id = chat.photo.big_photo_unique_id
 
 
 def to_message(message: PyrogramMessage, bot: Bot) -> Message:
@@ -12,11 +19,15 @@ def to_message(message: PyrogramMessage, bot: Bot) -> Message:
     message.thumb = thumb
 
     message.message_id = message.id
+
     if message.chat:
-        message.chat.type = message.chat.type.value
-        if message.chat.photo:
-            message.chat.photo.small_file_unique_id = message.chat.photo.small_photo_unique_id
-            message.chat.photo.big_file_unique_id = message.chat.photo.big_photo_unique_id
+        chat_fix(message.chat)
+
+    if message.forward_from_chat:
+        chat_fix(message.forward_from_chat)
+
+    if message.sender_chat:
+        chat_fix(message.sender_chat)
 
     if message.forward_date:
         message.forward_date = int(message.forward_date.timestamp())
@@ -40,7 +51,6 @@ def to_message(message: PyrogramMessage, bot: Bot) -> Message:
     else:
         raise ValueError(f"Unsupported media type {content_type}")
 
-    # stupid pydantic fix
     message.media_group_id = str(message.media_group_id)
 
     obj = Message.model_validate(message, from_attributes=True)
