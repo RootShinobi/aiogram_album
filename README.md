@@ -93,7 +93,7 @@ from aiogram_album.no_check_count_middleware import WithoutCountCheckAlbumMiddle
 WithoutCountCheckAlbumMiddleware(router=dp)
 ```
 
-## TTLCacheAlbumMiddleware
+## LockAlbumMiddleware
 _Install_
 ```bash
 pip install aiogram_album cachetools
