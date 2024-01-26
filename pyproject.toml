@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "aiogram_album"
-version = "0.0.4b"
+version = "0.0.5b"
 description = "😎"
 authors = ["RootShinobi <111008396+RootShinobi@users.noreply.github.com>"]
 readme = "README.md"

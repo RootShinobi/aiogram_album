@@ -1,23 +1,22 @@
 import asyncio
-from typing import Any, Dict, Union, Callable, Awaitable, Optional
+from typing import Any, Dict, Union, Optional, List
 
-from aiogram import BaseMiddleware, Router
+from aiogram import Dispatcher
 from aiogram.types import Message
 
 from aiogram_album.album_message import AlbumMessage
+from .base_middleware import BaseAlbumMiddleware
 
 
-class CountCheckAlbumMiddleware(BaseMiddleware):
+class CountCheckAlbumMiddleware(BaseAlbumMiddleware):
     def __init__(
         self,
         latency: Union[int, float] = 0.1,
-        router: Optional[Router] = None,
+        dispatcher: Optional[Dispatcher] = None,
     ):
+        super().__init__(dispatcher=dispatcher)
         self.latency = latency
-        self.album_data: dict[str, list[Message]] = {}
-        if router:
-            router.message.outer_middleware(self)
-            router.channel_post.outer_middleware(self)
+        self.album_data: Dict[str, List[Message]] = {}
 
     def collect_album_messages(self, event: Message):
         if event.media_group_id not in self.album_data:
@@ -25,21 +24,18 @@ class CountCheckAlbumMiddleware(BaseMiddleware):
         self.album_data[event.media_group_id].append(event)
         return len(self.album_data[event.media_group_id])
 
-    async def __call__(
+    async def handle(
         self,
-        handler: Callable[[Message, dict[str, Any]], Awaitable[Any]],
-        event: Message,
+        message: Message,
         data: Dict[str, Any],
-    ) -> Any:
-        if event.media_group_id is None:
-            return await handler(event, data)
-        total_before = self.collect_album_messages(event)
+    ) -> Optional[AlbumMessage]:
+        total_before = self.collect_album_messages(message)
         await asyncio.sleep(self.latency)
-        total_after = len(self.album_data[event.media_group_id])
+        total_after = len(self.album_data[message.media_group_id])
         if total_before != total_after:
             return
-        event = AlbumMessage.new(
-            messages=self.album_data.pop(event.media_group_id), data=data
+        album_message = AlbumMessage.new(
+            messages=self.album_data.pop(message.media_group_id), data=data
         )
         # album_messages.sort(key=lambda x: x.message_id)
-        return await handler(event, data)
+        return album_message

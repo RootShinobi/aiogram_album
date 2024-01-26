@@ -1,51 +1,46 @@
 import asyncio
-from typing import Any, Callable, Dict, Awaitable, Union, Optional, MutableMapping
+from typing import Any, Dict, Union, Optional, MutableMapping, List
 
-from aiogram import BaseMiddleware, Router
+from aiogram import Dispatcher
 from aiogram.types import Message
 from cachetools import TTLCache
 
-from aiogram_album import AlbumMessage
+from .album_message import AlbumMessage
+from .base_middleware import BaseAlbumMiddleware
 
 
-class LockAlbumMiddleware(BaseMiddleware):
-    cache: MutableMapping[str, list[Message]]
+class LockAlbumMiddleware(BaseAlbumMiddleware):
+    cache: MutableMapping[str, List[Message]]
 
     def __init__(
         self,
         latency: Union[int, float] = 0.2,
         maxsize: int = 1000,
         ttl: Union[int, float] = 10,
-        router: Optional[Router] = None,
+        dispatcher: Optional[Dispatcher] = None,
     ):
+        super().__init__(dispatcher=dispatcher)
         self.lock = asyncio.Lock()
         self.latency = latency
         self.cache = TTLCache(maxsize=maxsize, ttl=float(ttl) + 20.0)
-        if router:
-            router.message.outer_middleware(self)
-            router.channel_post.outer_middleware(self)
 
-    async def __call__(
+    async def handle(
         self,
-        handler: Callable[[Message, Dict[str, Any]], Awaitable[Any]],
-        event: Message,
+        message: Message,
         data: Dict[str, Any],
-    ) -> Any:
-        if event.media_group_id is None:
-            return await handler(event, data)
-
-        album_id: str = event.media_group_id
+    ) -> Optional[AlbumMessage]:
+        album_id: str = message.media_group_id
 
         async with self.lock:
             self.cache.setdefault(album_id, list())
-            self.cache[album_id].append(event)
+            self.cache[album_id].append(message)
 
         # Wait for some time until other updates are collected
         await asyncio.sleep(self.latency)
 
         # Find the smallest message_id in batch, this will be our only update
         # which will pass to handlers
-        my_message_id = smallest_message_id = event.message_id
+        my_message_id = smallest_message_id = message.message_id
 
         for item in self.cache[album_id]:
             smallest_message_id = min(smallest_message_id, item.message_id)
@@ -55,6 +50,4 @@ class LockAlbumMiddleware(BaseMiddleware):
         if my_message_id != smallest_message_id:
             return
 
-        event = AlbumMessage.new(messages=self.cache[album_id], data=data)
-
-        return await handler(event, data)
+        return AlbumMessage.new(messages=self.cache[album_id], data=data)

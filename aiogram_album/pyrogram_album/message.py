@@ -1,4 +1,4 @@
-from typing import Union, Optional, List, cast, Any
+from typing import Union, Optional, List, cast, Any, Dict
 
 from aiogram import Bot
 from aiogram.types import Message
@@ -13,7 +13,7 @@ class AlbumMessage(BaseAlbumMessage):
     _client: Client
 
     @classmethod
-    def new(cls, messages: List[Message], data: dict[str, Any]) -> "AlbumMessage":
+    def new(cls, messages: List[Message], data: Dict[str, Any]) -> "AlbumMessage":
         client = cast(Client, data["__pyro"])
         bot = cast(Bot, data["bot"])
         return cls.new_data(

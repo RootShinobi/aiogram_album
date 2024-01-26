@@ -1,7 +1,8 @@
 from typing import TYPE_CHECKING, Any, List, Optional, Union
 
-from .message_id import MessageId
 from aiogram.methods.base import TelegramMethod
+
+from .message_id import MessageId
 
 
 class ForwardMessages(TelegramMethod[List[MessageId]]):

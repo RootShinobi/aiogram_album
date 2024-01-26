@@ -47,7 +47,7 @@ class BaseAlbumMessage(Message, frozen=False):
     _messages: List[Message]
 
     @classmethod
-    def new(cls, messages: List[Message], data: dict[str, Any]) -> "BaseAlbumMessage":
+    def new(cls, messages: List[Message], data: Dict[str, Any]) -> "BaseAlbumMessage":
         bot = cast(Bot, data["bot"])
         self = cls.model_validate(messages[0], from_attributes=True).as_(bot)
         self._messages = messages
